@@ -26,6 +26,11 @@ class PGLoss(Enum):
     CLIP = "clip"
 
 
+class EntropyMethod(Enum):
+    MAX = "max_entropy"
+    REGULARIZED = "entropy_regularized"
+
+
 class NPO(BatchPolopt):
     def __init__(self,
                  pg_loss=PGLoss.VANILLA,
@@ -36,10 +41,12 @@ class NPO(BatchPolopt):
                  policy=None,
                  policy_ent_coeff=1e-2,
                  use_softplus_entropy=True,
+                 entropy_method=EntropyMethod.MAX,
                  **kwargs):
         self.name = name
         self._name_scope = tf.name_scope(self.name)
         self._use_softplus_entropy = use_softplus_entropy
+        self._entropy_method = entropy_method
 
         self._pg_loss = pg_loss
         if optimizer is None:
@@ -229,7 +236,11 @@ class NPO(BatchPolopt):
         policy_entropy = self._build_entropy_term(i)
 
         with tf.name_scope("augmented_rewards"):
-            rewards = i.reward_var + (self.policy_ent_coeff * policy_entropy)
+            if self._entropy_method == EntropyMethod.MAX:
+                rewards = i.reward_var + (
+                    self.policy_ent_coeff * policy_entropy)
+            else:
+                rewards = i.reward_var
 
         with tf.name_scope("policy_loss"):
             advantages = compute_advantages(
@@ -302,6 +313,11 @@ class NPO(BatchPolopt):
                 # -E_t[surrogate objective]
                 surr_loss = -tf.reduce_mean(surr_obj)
 
+                if self._entropy_method == EntropyMethod.REGULARIZED:
+                    policy_entropy = tf.reduce_mean(
+                        policy_entropy * i.valid_var)
+                    surr_loss += self.policy_ent_coeff * policy_entropy
+
             # Diagnostic functions
             self.f_policy_kl = tensor_utils.compile_function(
                 flatten_inputs(self._policy_opt_inputs),
@@ -338,11 +354,9 @@ class NPO(BatchPolopt):
             if self._use_softplus_entropy:
                 policy_entropy = tf.nn.softplus(policy_entropy)
 
-            policy_entropy = tf.reduce_mean(policy_entropy * i.valid_var)
-
         self.f_policy_entropy = tensor_utils.compile_function(
             flatten_inputs(self._policy_opt_inputs),
-            policy_entropy,
+            tf.reduce_mean(policy_entropy * i.valid_var),
             log_name="f_policy_entropy")
 
         return policy_entropy
