@@ -29,7 +29,10 @@ def run_task(*_):
     env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
 
     policy = GaussianMLPPolicy(
-        name="policy", env_spec=env.spec, hidden_sizes=(64, 64))
+        name="policy",
+        env_spec=env.spec,
+        hidden_sizes=(64, 64),
+        adaptive_std=True)
 
     baseline = GaussianMLPBaseline(env_spec=env.spec)
 
@@ -43,7 +46,7 @@ def run_task(*_):
         discount=0.99,
         step_size=0.01,
         optimizer_args=dict(batch_size=32, max_epochs=10),
-        policy_ent_coeff=1.0,
+        policy_ent_coeff=1e-2,
         plot=False)
     algo.train()
 

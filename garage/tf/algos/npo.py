@@ -83,6 +83,10 @@ class NPO(BatchPolopt):
     def optimize_policy(self, itr, samples_data):
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
 
+        logger.log("Policy_entropy_returned_from_distribution")
+        print("Policy_entropy_returned_from_distribution",
+              self.f_policy_entropy_flat(*policy_opt_input_values))
+
         # Train policy network
         logger.log("Computing loss before")
         loss_before = self.optimizer.loss(policy_opt_input_values)
@@ -340,13 +344,15 @@ class NPO(BatchPolopt):
 
     def _build_entropy_term(self, i):
         with tf.name_scope("policy_entropy"):
-            policy_dist_info_flat = self.policy.dist_info_sym(
-                i.flat.obs_var,
-                i.flat.policy_state_info_vars,
-                name="policy_dist_info_flat")
-
-            policy_entropy_flat = self.policy._dist.entropy_sym(
-                policy_dist_info_flat)
+            policy_entropy_flat = self.policy.entropy_sym(
+                i.obs_var, name="policy_entropy_flat")
+            # policy_dist_info_flat = self.policy.dist_info_sym(
+            #     i.flat.obs_var,
+            #     i.flat.policy_state_info_vars,
+            #     name="policy_dist_info_flat")
+            #
+            # policy_entropy_flat = self.policy._dist.entropy_sym(
+            #     policy_dist_info_flat)
             policy_entropy = tf.reshape(policy_entropy_flat,
                                         [-1, self.max_path_length])
 
@@ -358,6 +364,9 @@ class NPO(BatchPolopt):
             flatten_inputs(self._policy_opt_inputs),
             tf.reduce_mean(policy_entropy * i.valid_var),
             log_name="f_policy_entropy")
+
+        self.f_policy_entropy_flat = tensor_utils.compile_function(
+            flatten_inputs(self._policy_opt_inputs), policy_entropy_flat)
 
         return policy_entropy
 
