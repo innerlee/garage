@@ -83,9 +83,17 @@ class NPO(BatchPolopt):
     def optimize_policy(self, itr, samples_data):
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
 
+        print(policy_opt_input_values)
+
+        ###########################DEBUG######################
         logger.log("Policy_entropy_returned_from_distribution")
         print("Policy_entropy_returned_from_distribution",
               self.f_policy_entropy_flat(*policy_opt_input_values))
+        logger.log("KL_check")
+        valid_old, valid, kl = self.f_policy_kl_vars(*policy_opt_input_values)
+        print("Policy_valid_old_", valid_old)
+        print("Policy_valid_flat", valid)
+        print("kl", kl)
 
         # Train policy network
         logger.log("Computing loss before")
@@ -98,6 +106,13 @@ class NPO(BatchPolopt):
         policy_kl = self.f_policy_kl(*policy_opt_input_values)
         logger.log("Computing loss after")
         loss_after = self.optimizer.loss(policy_opt_input_values)
+
+        ###########################DEBUG######################
+        valid_old, valid, kl = self.f_policy_kl_vars(*policy_opt_input_values)
+        print("AFTER: Policy_valid_old_", valid_old)
+        print("AFTER: Policy_valid_flat", valid)
+        print("AFTER: kl", kl)
+
         logger.record_tabular("{}/LossBefore".format(self.policy.name),
                               loss_before)
         logger.record_tabular("{}/LossAfter".format(self.policy.name),
@@ -340,6 +355,13 @@ class NPO(BatchPolopt):
                 returns,
                 log_name="f_returns")
 
+            ####################DEBUG####################
+            self.f_policy_kl_vars = tensor_utils.compile_function(
+                flatten_inputs(self._policy_opt_inputs), [
+                    i.valid.policy_old_dist_info_vars, policy_dist_info_valid,
+                    kl
+                ])
+
             return surr_loss, pol_mean_kl
 
     def _build_entropy_term(self, i):
@@ -365,6 +387,7 @@ class NPO(BatchPolopt):
             tf.reduce_mean(policy_entropy * i.valid_var),
             log_name="f_policy_entropy")
 
+        #######################DEBUG#################
         self.f_policy_entropy_flat = tensor_utils.compile_function(
             flatten_inputs(self._policy_opt_inputs), policy_entropy_flat)
 
@@ -413,14 +436,25 @@ class NPO(BatchPolopt):
     def _policy_opt_input_values(self, samples_data):
         """ Map rollout samples to the policy optimizer inputs """
 
+        ################DEBUG#############
+        for k in self.policy.state_info_keys:
+            print(k, samples_data["agent_infos"][k])
+
+        for k in self.policy._dist.dist_info_keys:
+            print("******************************************")
+            print(k, samples_data["agent_infos"][k])
+
         policy_state_info_list = [
             samples_data["agent_infos"][k] for k in self.policy.state_info_keys
         ]
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+        print(policy_state_info_list)
         policy_old_dist_info_list = [
             samples_data["agent_infos"][k]
             for k in self.policy._dist.dist_info_keys
         ]
-
+        # import pdb
+        # pdb.set_trace()
         policy_opt_input_values = self._policy_opt_inputs._replace(
             obs_var=samples_data["observations"],
             action_var=samples_data["actions"],
