@@ -83,12 +83,12 @@ class NPO(BatchPolopt):
     def optimize_policy(self, itr, samples_data):
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
 
-        print(policy_opt_input_values)
+        # print(policy_opt_input_values)
 
         ###########################DEBUG######################
         logger.log("Policy_entropy_returned_from_distribution")
-        print("Policy_entropy_returned_from_distribution",
-              self.f_policy_entropy_flat(*policy_opt_input_values))
+        # print("Policy_entropy_returned_from_distribution",
+        #       self.f_policy_entropy_flat(*policy_opt_input_values))
         logger.log("KL_check")
         valid_old, valid, kl = self.f_policy_kl_vars(*policy_opt_input_values)
         print("Policy_valid_old_", valid_old)

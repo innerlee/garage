@@ -32,7 +32,7 @@ def run_task(*_):
         name="policy",
         env_spec=env.spec,
         hidden_sizes=(64, 64),
-        adaptive_std=True)
+        adaptive_std=False)
 
     baseline = GaussianMLPBaseline(env_spec=env.spec)
 
@@ -42,7 +42,7 @@ def run_task(*_):
         baseline=baseline,
         batch_size=2048,
         max_path_length=100,
-        n_itr=10,
+        n_itr=2,
         discount=0.99,
         step_size=0.01,
         optimizer_args=dict(batch_size=32, max_epochs=10),
