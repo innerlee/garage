@@ -13,6 +13,7 @@ import gym
 from garage.envs import normalize
 from garage.misc.instrument import run_experiment
 from garage.tf.algos import PPO
+from garage.tf.algos.npo import EntropyMethod
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 # from garage.tf.policies import GaussianMLPPolicy
@@ -42,11 +43,12 @@ def run_task(*_):
         baseline=baseline,
         batch_size=2048,
         max_path_length=100,
-        n_itr=2,
+        n_itr=10,
         discount=0.99,
         step_size=0.01,
         optimizer_args=dict(batch_size=32, max_epochs=10),
-        policy_ent_coeff=1e-2,
+        policy_ent_coeff=-1,
+        entropy_method=EntropyMethod.REGULARIZED,
         plot=False)
     algo.train()
 

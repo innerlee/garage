@@ -86,14 +86,16 @@ class NPO(BatchPolopt):
         # print(policy_opt_input_values)
 
         ###########################DEBUG######################
-        logger.log("Policy_entropy_returned_from_distribution")
-        # print("Policy_entropy_returned_from_distribution",
-        #       self.f_policy_entropy_flat(*policy_opt_input_values))
-        logger.log("KL_check")
-        valid_old, valid, kl = self.f_policy_kl_vars(*policy_opt_input_values)
-        print("Policy_valid_old_", valid_old)
-        print("Policy_valid_flat", valid)
-        print("kl", kl)
+        print("********************DEBUG********************")
+        print("Policy_entropy_returned_from_distribution\n",
+              self.f_policy_entropy_flat(*policy_opt_input_values))
+        print("Policy_reduced_mean\n",
+              self.f_policy_entropy(*policy_opt_input_values))
+        # logger.log("KL_check")
+        # valid_old, valid, kl = self.f_policy_kl_vars(*policy_opt_input_values)
+        # print("Policy_valid_old_", valid_old)
+        # print("Policy_valid_flat", valid)
+        # print("kl", kl)
 
         # Train policy network
         logger.log("Computing loss before")
@@ -108,10 +110,17 @@ class NPO(BatchPolopt):
         loss_after = self.optimizer.loss(policy_opt_input_values)
 
         ###########################DEBUG######################
-        valid_old, valid, kl = self.f_policy_kl_vars(*policy_opt_input_values)
-        print("AFTER: Policy_valid_old_", valid_old)
-        print("AFTER: Policy_valid_flat", valid)
-        print("AFTER: kl", kl)
+        print("********************DEBUG AFTER********************")
+        print("Policy_entropy_returned_from_distribution\n",
+              self.f_policy_entropy_flat(*policy_opt_input_values))
+        print("Policy_reduced_mean\n",
+              self.f_policy_entropy(*policy_opt_input_values))
+
+        ###########################DEBUG######################
+        # valid_old, valid, kl = self.f_policy_kl_vars(*policy_opt_input_values)
+        # print("AFTER: Policy_valid_old_", valid_old)
+        # print("AFTER: Policy_valid_flat", valid)
+        # print("AFTER: kl", kl)
 
         logger.record_tabular("{}/LossBefore".format(self.policy.name),
                               loss_before)
@@ -437,18 +446,18 @@ class NPO(BatchPolopt):
         """ Map rollout samples to the policy optimizer inputs """
 
         ################DEBUG#############
-        for k in self.policy.state_info_keys:
-            print(k, samples_data["agent_infos"][k])
-
-        for k in self.policy._dist.dist_info_keys:
-            print("******************************************")
-            print(k, samples_data["agent_infos"][k])
-
+        # for k in self.policy.state_info_keys:
+        #     print(k, samples_data["agent_infos"][k])
+        #
+        # for k in self.policy._dist.dist_info_keys:
+        #     print("******************************************")
+        #     print(k, samples_data["agent_infos"][k])
+        #
         policy_state_info_list = [
             samples_data["agent_infos"][k] for k in self.policy.state_info_keys
         ]
-        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-        print(policy_state_info_list)
+        # print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+        # print(policy_state_info_list)
         policy_old_dist_info_list = [
             samples_data["agent_infos"][k]
             for k in self.policy._dist.dist_info_keys
