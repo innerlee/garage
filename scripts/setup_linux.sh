@@ -215,9 +215,6 @@ conda activate garage
     pip install "tensorflow-gpu<1.10,>=1.9.0"
   fi
 
-  # box2d-py>=2.3.4 works on both Linux & OSX.
-  pip install box2d-py
-
   # We need a MuJoCo key to import mujoco_py
   cp ${_arg_mjkey} "${HOME}"/.mujoco/mjkey.txt
 
