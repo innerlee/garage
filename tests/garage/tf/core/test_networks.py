@@ -1,6 +1,7 @@
-import tensorflow as tf
-from garage.tf.core.networks import mlp
 import numpy as np
+import tensorflow as tf
+
+from garage.tf.core.networks import mlp
 from tests.fixtures import TfGraphTestCase
 
 
